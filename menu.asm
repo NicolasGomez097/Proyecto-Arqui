@@ -2,21 +2,25 @@
 	x   db  ?
 	y   dw  ?
 	z   dd  ?
-	msgMenu db "Menu",0dh,0ah,"1)Op1   4)Op4",0dh,0ah,"2)Op2   5)Salir",0dh,0ah,"3)Op3",0dh,0ah,'$'
+	msgMenu db " Menu",0dh,0ah,"1)Op1   4)Op4",0dh,0ah,"2)Op2   5)Salir",0dh,0ah,"3)Op3",0dh,0ah,'$'
 	msgError db 0dh,0ah,"Solo ingrese opciones validas",0dh,0ah,'$'
-	msgOp1 db 0dh,0ah,"Auto fantastico",0dh,0ah,'$'
-	msgOp2 db 0dh,0ah,"Choque",0dh,0ah,'$'
-	msgOp3 db 0dh,0ah,"Opcion 3",0dh,0ah,'$'
-	msgOp4 db 0dh,0ah,"Opcion 4",0dh,0ah,'$'
+	msgInstruccion db " Precione cualquier tecla para salir o las fechas arriba y abajo",0dh,0ah,"para aumentar la velocidad o disminuirla respectivamente",0dh,0ah,0ah,'$'
+	msgOp1 db 0dh,0ah," Auto fantastico",0dh,0ah,'$'
+	msgOp2 db 0dh,0ah," Choque",0dh,0ah,'$'
+	msgOp3 db 0dh,0ah," Opcion 3",0dh,0ah,'$'
+	msgOp4 db 0dh,0ah," Opcion 4",0dh,0ah,'$'
 	msgLimpiar db 0ah,0dh,'$'
 	direccion dw offset bop1,offset bop2,offset bop3,offset bop4,offset fin
 	clave db  "Clave"
 	almacen db  5 dup(?)
-	msPassword db  0dh,0ah,"Ingrese la constraseña:",0dh,0ah,'$'
+	msPassword db  0dh,0ah,"Ingrese la clave:",0dh,0ah,'$'
 	msIncorrecta db  0dh,0ah,"Clave incorrecta",0dh,0ah,'$'
-	msError db  0dh,0ah,"Se exediñ de los intentos posibles",0dh,0ah,'$'
+	msError db  0dh,0ah,"Se exedio de los intentos posibles",0dh,0ah,'$'
 	msBienvenida db  0dh,0ah,"Bienvenido al sistema",0dh,0ah,'$'
 	tabla1 db 81h,42h,24h,18h,18h,24h,42h,81h
+	velmax dw 0f00h
+	velmin dw 0100h
+	salto dw 0100h
 	vel1 dw 0f00h
 	vel2 dw 0f00h
 ;	vel3 dw 0f00h
@@ -51,6 +55,7 @@ start: 	mov ax,MY_DATA      ;Inicializa DS
 
 ; Instrucciones para el calulo de la contraseña Contraseña
 ; Parte a
+	call limpiar
 	mov cx,03h
 aciclo:	push cx
 	mov cx,05h
@@ -72,9 +77,7 @@ aingreso:mov ah,06h
 
 	call compare
 	jz asigue
-	pop cx
 	mov dx,offset msIncorrecta
-	push cx
 	call mostrarMsg
 	mov cx,0f00h
 	call delay
@@ -88,7 +91,8 @@ aingreso:mov ah,06h
 	call delay
 	call fin
 
-asigue:	mov dx,offset msBienvenida
+asigue:	pop cx
+	mov dx,offset msBienvenida
 	call mostrarMsg
 	mov cx,0f00h
 	call delay
@@ -112,28 +116,32 @@ menu:	call limpiar
 	jmp menu
 
 bop1:	mov dx,offset msgOp1
-	mov bx,[vel1]
 	call mostrarMsg
+	mov dx,offset msgInstruccion
+	call mostrarMsg
+	mov bx,[vel1]
 	call auto
 	mov [vel1],bx
 	ret
 
 bop2:	mov dx,offset msgOp2
-	mov bx,[vel2]
 	call mostrarMsg
+	mov dx,offset msgInstruccion
+	call mostrarMsg
+	mov bx,[vel2]
 	call choque
 	mov [vel2],bx
 	ret
 
 bop3:	mov dx,offset msgOp3
 	call mostrarMsg
-	mov cx,0fffh
+	mov cx,2fffh
 	call delay
 	ret
 
 bop4:	mov dx,offset msgOp4
 	call mostrarMsg
-	mov cx,0fffh
+	mov cx,2fffh
 	call delay
 	ret
 
@@ -142,11 +150,13 @@ bop4:	mov dx,offset msgOp4
 error:	mov ah,09
 	mov dx,offset msgError
 	int 21h
+	mov cx,2fffh
+	call delay
 	jmp menu
 
 ; Instrucciones para limpiar la pantalla.
 ; Parte c
-limpiar:mov cx,23
+limpiar:mov cx,25
 cbucle:	mov ah,09h
 	mov dx,offset msgLimpiar
 	int 21h
@@ -217,16 +227,16 @@ esPrecionada:
 	mov dl,0ffh
 	int 21h
 	cmp al,48h
-	jnz gsigue
-	cmp bx,0100h
+	jne gsigue
+	cmp bx,[velmin]
 	je gsalir
-	sub bx,0100h
+	sub bx,[salto]
 	jmp gsalir
 gsigue:	cmp al,50h
-	jnz gsalir
-	cmp bx,0f00h
+	jne gsalir
+	cmp bx,[velmax]
 	je gsalir
-	add bx,0100h
+	add bx,[salto]
 	jmp gsalir
 gsetAl:	mov al,1
 gsalir:	ret

@@ -97,8 +97,6 @@ menu:   call limpiar
         sal bx,1
         push bx
         mov dx,offset msgGuia
-        call mostrarMsg
-        pop bx
         call [bx+offset direccion]
         jmp menu
 msig:   mov dx,offset msgError
@@ -106,12 +104,14 @@ msig:   mov dx,offset msgError
         jmp menu
 ;
 ;Autofantastico
-op1:    mov dx,offset msgOp1
+op1:    call mostrarMsg
+        mov dx,offset msgOp1
         call mostrarMsg
         call autof
         ret
 ;Choque
-op2:    mov dx,offset msgOp2
+op2:    call mostrarMsg
+        mov dx,offset msgOp2
         call mostrarMsg
         mov di,offset tabla
         mov si,offset vel2
@@ -238,8 +238,11 @@ gciclo1:push bx
         jnz gotro
         cmp bx,[min1]   
         je glup
-        sub bx,[salto]               
-        jmp glup
+        sub bx,[salto]
+        cmp cx,[salto]
+        jbe gahead
+        sub cx,[salto]               
+gahead: jmp glup
 gotro:  cmp al,50h
         jnz  gotro1
         cmp bx,[max1]
